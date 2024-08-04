@@ -1,13 +1,35 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="./vite.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Three.js example</title>
-  </head>
-  <body>
-    <div id="app"></div>
-    <script type="module" src="/src/main.ts"></script>
-  </body>
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/svg+xml" href="./vite.svg" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Three.js example</title>
+</head>
+
+<body>
+  <div id="app"></div>
+  <div id="nav">
+    <div class="nav-wrapper">
+      <div class="nav-item" draggable="true" data-type="0">
+        <img src="./img/box.jpg" alt=""/>
+      </div>
+      <div class="nav-item" draggable="true" data-type="1">
+        <img src="./img/cone.jpg" alt=""/>
+      </div>
+      <div class="nav-item" draggable="true" data-type="2">
+        <img src="./img/cylinder.jpg" alt=""/>
+      </div>
+      <div class="nav-item" draggable="true" data-type="3">
+        <img src="./img/icosahedron.jpg" alt=""/>
+      </div>
+      <div class="nav-item" draggable="true" data-type="4">
+        <img src="./img/torus.jpg" alt=""/>
+      </div>
+    </div>
+  </div>
+  <script type="module" src="/src/main.ts"></script>
+</body>
+
 </html>

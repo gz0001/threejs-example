@@ -1,5 +1,5 @@
 // @ts-nocheck
-import './style.css';
+import './style.scss';
 
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
@@ -74,7 +74,7 @@ function init() {
     new THREE.TorusGeometry(0.2, 0.04, 64, 32),
   ];
 
-  for (let i = 0; i < 50; i++) {
+  for (let i = 0; i < 5; i++) {
     const geometry = geometries[Math.floor(Math.random() * geometries.length)];
     const material = new THREE.MeshStandardMaterial({
       color: Math.random() * 0xffffff,
@@ -101,6 +101,47 @@ function init() {
 
     objects.push(object);
   }
+
+  // Vector position and drap objects
+  let vector = new THREE.Vector3();
+  document.querySelectorAll('.nav-item').forEach((item) => {
+    item.addEventListener('dragend', (event) => {
+      vector.set(
+        (event.clientX / window.innerWidth) * 2 - 1,
+        -(event.clientY / window.innerHeight) * 2 + 1,
+        0.9
+      );
+      vector.unproject(camera);
+
+      const type = item.getAttribute('data-type');
+      const geometry = geometries[type];
+      const material = new THREE.MeshStandardMaterial({
+        color: Math.random() * 0xffffff,
+        roughness: 0.7,
+        metalness: 0.0,
+      });
+
+      // Add object
+      const object = new THREE.Mesh(geometry, material);
+      object.position.x = vector.x;
+      object.position.y = vector.y;
+      object.position.z = vector.z;
+
+      object.rotation.x = Math.random() * 2 * Math.PI;
+      object.rotation.y = Math.random() * 2 * Math.PI;
+      object.rotation.z = Math.random() * 2 * Math.PI;
+
+      object.scale.setScalar(Math.random() + 0.5);
+
+      object.castShadow = true;
+      object.receiveShadow = true;
+
+      group.add(object);
+
+      objects.push(object);
+    });
+  });
+
 
   //
 
@@ -165,6 +206,14 @@ function init() {
 
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('click', onClick);
+  
+  // Make canvas dropable
+  const canvas = container.querySelector('canvas');
+  if(canvas) {
+    canvas.addEventListener('dragover', (event) => {
+      event.preventDefault();
+    });
+  }
 }
 
 function onWindowResize() {
