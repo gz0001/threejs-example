@@ -6,6 +6,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { XRButton } from 'three/addons/webxr/XRButton.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { DragControls } from 'three/addons/controls/DragControls.js';
+import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 
 let container;
 let camera, scene, renderer;
@@ -74,7 +75,7 @@ function init() {
     new THREE.TorusGeometry(0.2, 0.04, 64, 32),
   ];
 
-  for (let i = 0; i < 5; i++) {
+  for (let i = 0; i < 1; i++) {
     const geometry = geometries[Math.floor(Math.random() * geometries.length)];
     const material = new THREE.MeshStandardMaterial({
       color: Math.random() * 0xffffff,
@@ -142,7 +143,6 @@ function init() {
     });
   });
 
-
   //
 
   renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -206,14 +206,42 @@ function init() {
 
   window.addEventListener('resize', onWindowResize);
   document.addEventListener('click', onClick);
-  
+
   // Make canvas dropable
   const canvas = container.querySelector('canvas');
-  if(canvas) {
+  if (canvas) {
     canvas.addEventListener('dragover', (event) => {
       event.preventDefault();
     });
   }
+
+  // Load STL file:
+  const loader = new STLLoader();
+  const fileInput = document.querySelector('#file');
+  fileInput?.addEventListener('change', (event) => {
+    
+    loader.load(URL.createObjectURL(event.target.files[0]), (geometry) => {
+
+      const material = new THREE.MeshPhongMaterial({
+        color: Math.random() * 0xffffff,
+        specular: 0x111111,
+        shininess: 200,
+      });
+      const object = new THREE.Mesh(geometry, material);
+      object.position.x = Math.random() * 4 - 2;
+      object.position.y = Math.random() * 2;
+      object.position.z = Math.random() * 4 - 2;
+      
+      object.scale.setScalar(Math.random() + 0.5);
+
+      object.castShadow = true;
+      object.receiveShadow = true;
+
+      geometry.center();
+      group.add(object);
+      objects.push(object);
+    });
+  });
 }
 
 function onWindowResize() {
@@ -294,6 +322,9 @@ function cleanIntersected() {
 }
 
 function onClick(event) {
+  if (!event.target.closest('canvas')) {
+    return;
+  }
   event.preventDefault();
 
   const draggableObjects = dragControllers.getObjects();

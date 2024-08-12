@@ -102,6 +102,8 @@ img {
 	left: 2rem;
 	background-color: rgba(0,0,0,0.5);
 	max-width: 4rem;
+	max-height: calc(100% - 4rem);
+	overflow-y: auto;
 	
 	.nav-item {
 		margin-bottom: 1.5rem;
@@ -115,4 +117,21 @@ img {
 			margin-bottom: 0;
 		}
 	}
+}
+
+#upload {
+	position: fixed;
+	bottom: 2rem;
+	right: 2rem;
+	background-color: rgba(0,0,0,0.5);
+	padding: 1.5rem;
+}
+
+.btn {
+	background-color: #000;
+	color: #fff;
+	border: 1px solid #fff;
+	padding: 0.5rem 1rem;
+	cursor: pointer;
+	text-transform: uppercase;
 }
