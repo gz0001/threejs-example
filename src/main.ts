@@ -24,6 +24,24 @@ let enableSelection = false;
 
 const objects = [];
 
+const pointsArr = [
+  [
+    new THREE.Vector3(-10, 0, 10),
+    new THREE.Vector3(-5, 5, 5),
+    new THREE.Vector3(5, 5, 5),
+    new THREE.Vector3(5, -5, 5),
+    new THREE.Vector3(10, 0, 10),
+    new THREE.Vector3(-10, 0, 10),
+  ],
+
+  [new THREE.Vector3(-10, 0, -20), new THREE.Vector3(50, 10, 10)],
+];
+const clock = new THREE.Clock();
+const eCurve = new THREE.EllipseCurve(0, 0, 10, 5);
+const eVector = new THREE.Vector3();
+
+const paths = [];
+
 const mouse = new THREE.Vector2();
 init();
 
@@ -35,7 +53,7 @@ function init() {
   scene.background = new THREE.Color('skyblue');
 
   camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 2000);
-  camera.position.set(0, 1.6, 3);
+  camera.position.set(10, 10, 10);
 
   controls = new OrbitControls(camera, container);
   controls.target.set(0, 1.6, 0);
@@ -75,7 +93,7 @@ function init() {
     new THREE.TorusGeometry(0.2, 0.04, 64, 32),
   ];
 
-  for (let i = 0; i < 1; i++) {
+  for (let i = 0; i < 3; i++) {
     const geometry = geometries[Math.floor(Math.random() * geometries.length)];
     const material = new THREE.MeshStandardMaterial({
       color: Math.random() * 0xffffff,
@@ -102,6 +120,34 @@ function init() {
 
     objects.push(object);
   }
+
+  // Moving path
+  const points = [
+    new THREE.Vector3(-10, 0, 10),
+    new THREE.Vector3(-5, 5, 5),
+    new THREE.Vector3(5, 5, 5),
+    new THREE.Vector3(5, -5, 5),
+    new THREE.Vector3(10, 0, 10),
+    new THREE.Vector3(-10, 0, 10),
+  ];
+
+  pointsArr.map((points) => {
+    const path = new THREE.CatmullRomCurve3(points);
+    const pathGeometry = new THREE.BufferGeometry().setFromPoints(path.getPoints(50));
+    const pathMaterial = new THREE.LineBasicMaterial({ color: 0xffffff });
+    const pathObject = new THREE.Line(pathGeometry, pathMaterial);
+    scene.add(pathObject);
+    paths.push(path);
+  });
+
+  // ellipse path
+  let eLine = new THREE.Line(
+    new THREE.BufferGeometry().setFromPoints(eCurve.getSpacedPoints(100)),
+    new THREE.LineBasicMaterial({
+      color: 'yellow',
+    })
+  );
+  scene.add(eLine);
 
   // Vector position and drap objects
   let vector = new THREE.Vector3();
@@ -219,9 +265,7 @@ function init() {
   const loader = new STLLoader();
   const fileInput = document.querySelector('#file');
   fileInput?.addEventListener('change', (event) => {
-    
     loader.load(URL.createObjectURL(event.target.files[0]), (geometry) => {
-
       const material = new THREE.MeshPhongMaterial({
         color: Math.random() * 0xffffff,
         specular: 0x111111,
@@ -231,7 +275,7 @@ function init() {
       object.position.x = Math.random() * 4 - 2;
       object.position.y = Math.random() * 2;
       object.position.z = Math.random() * 4 - 2;
-      
+
       object.scale.setScalar(Math.random() + 0.5);
 
       object.castShadow = true;
@@ -361,13 +405,32 @@ function onClick(event) {
   animate();
 }
 
-//
+function movingObjects() {
+  paths.forEach((path, i) => {
+    const obj = objects[i];
+    const num = pointsArr[i].length + 1;
+    const time = Date.now();
+    const t = ((time / (i * 500 + 1000)) % num) / num;
+    const pos = path.getPointAt(t);
+    obj.position.copy(pos);
+
+    const tangent = path.getTangentAt(t).normalize();
+    obj.lookAt(pos.clone().add(tangent));
+  });
+  
+  let t = (clock.getElapsedTime() * 0.5) % 1;
+  const obj3 = objects[2]
+  eCurve.getPointAt(t, eVector)
+  obj3.position.copy(eVector);
+}
 
 function animate() {
   cleanIntersected();
 
   intersectObjects(controller1);
   intersectObjects(controller2);
+
+  movingObjects();
 
   renderer.render(scene, camera);
 }
