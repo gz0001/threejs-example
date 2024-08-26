@@ -7,10 +7,9 @@ import { XRButton } from 'three/addons/webxr/XRButton.js';
 import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFactory.js';
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
-import { Flow } from 'three/examples/jsm/Addons.js';
 
 let container;
-let camera: THREE.PerspectiveCamera, scene, renderer;
+let camera, scene, renderer;
 let controller1, controller2;
 let dragControllers;
 let controllerGrip1, controllerGrip2;
@@ -34,14 +33,11 @@ const pointsArr = [
     new THREE.Vector3(10, 0, 10),
     new THREE.Vector3(-10, 0, 10),
   ],
-
-  [new THREE.Vector3(-10, 0, -20), new THREE.Vector3(50, 10, 10)],
 ];
 const clock = new THREE.Clock();
 const eCurve = new THREE.EllipseCurve(0, 0, 10, 5);
-let eLine;
 const eVector = new THREE.Vector3();
-
+let eLine;
 const paths = [];
 
 const mouse = new THREE.Vector2();
@@ -95,7 +91,7 @@ function init() {
     new THREE.TorusGeometry(0.2, 0.04, 64, 32),
   ];
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 0; i < 1; i++) {
     const geometry = geometries[Math.floor(Math.random() * geometries.length)];
     const material = new THREE.MeshStandardMaterial({
       color: Math.random() * 0xffffff,
@@ -124,6 +120,8 @@ function init() {
   }
 
   // Moving path
+
+  // Moving path
   const points = [
     new THREE.Vector3(-10, 0, 10),
     new THREE.Vector3(-5, 5, 5),
@@ -141,57 +139,6 @@ function init() {
     scene.add(pathObject);
     paths.push(path);
   });
-
-  // ellipse path
-  eLine = new THREE.Line(
-    new THREE.BufferGeometry().setFromPoints(eCurve.getSpacedPoints(100)),
-    new THREE.LineBasicMaterial({
-      color: 'yellow',
-    })
-  );
-  scene.add(eLine);
-
-  // Vector position and drap objects
-  let vector = new THREE.Vector3();
-  document.querySelectorAll('.nav-item').forEach((item) => {
-    item.addEventListener('dragend', (event) => {
-      vector.set(
-        (event.clientX / window.innerWidth) * 2 - 1,
-        -(event.clientY / window.innerHeight) * 2 + 1,
-        0.9
-      );
-      vector.unproject(camera);
-
-      const type = item.getAttribute('data-type');
-      const geometry = geometries[type];
-      const material = new THREE.MeshStandardMaterial({
-        color: Math.random() * 0xffffff,
-        roughness: 0.7,
-        metalness: 0.0,
-      });
-
-      // Add object
-      const object = new THREE.Mesh(geometry, material);
-      object.position.x = vector.x;
-      object.position.y = vector.y;
-      object.position.z = vector.z;
-
-      object.rotation.x = Math.random() * 2 * Math.PI;
-      object.rotation.y = Math.random() * 2 * Math.PI;
-      object.rotation.z = Math.random() * 2 * Math.PI;
-
-      object.scale.setScalar(Math.random() + 0.5);
-
-      object.castShadow = true;
-      object.receiveShadow = true;
-
-      group.add(object);
-
-      objects.push(object);
-    });
-  });
-
-  //
 
   renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
   renderer.setPixelRatio(window.devicePixelRatio);
@@ -443,6 +390,7 @@ function onClick(event) {
 }
 
 function movingObjects() {
+  let tan;
   paths.forEach((path, i) => {
     const obj = objects[i];
     const num = pointsArr[i].length + 1;
@@ -452,13 +400,16 @@ function movingObjects() {
     obj.position.copy(pos);
 
     const tangent = path.getTangentAt(t).normalize();
+    if (i === 0) tan = tangent;
     obj.lookAt(pos.clone().add(tangent));
   });
 
-  let t = (clock.getElapsedTime() * 0.5) % 1;
-  const obj3 = objects[2];
-  eCurve.getPointAt(t, eVector);
-  obj3.position.copy(eVector);
+  const cameraOffset = new THREE.Vector3(10, 10, 10);
+  const objectPosition = new THREE.Vector3();
+  objects[0].getWorldPosition(objectPosition);
+  const obj = objects[0];
+  camera.position.copy(objectPosition).add(cameraOffset);
+
 }
 
 function animate() {

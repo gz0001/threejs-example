@@ -119,7 +119,7 @@ img {
 	}
 }
 
-#upload {
+#upload, #snapshot {
 	position: fixed;
 	bottom: 2rem;
 	right: 2rem;
@@ -134,4 +134,8 @@ img {
 	padding: 0.5rem 1rem;
 	cursor: pointer;
 	text-transform: uppercase;
+}
+
+#snapshot {
+	bottom: 8rem;
 }
