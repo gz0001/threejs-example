@@ -62,9 +62,13 @@ export const getObjSnap = (object) => {
   const delta = clock.getDelta();
   const hasControlsUpdated = cameraControls.update(delta);
   renderer.render(scene, camera);
-  
+  const snapshot = renderer.domElement.toDataURL("image/jpeg");
 
+  container.remove();
+  renderer.dispose();
+  controls.dispose();
+  cameraControls.dispose();
   
-  return renderer.domElement.toDataURL("image/jpeg");
+  return snapshot;
 };
 
