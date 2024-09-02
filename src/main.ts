@@ -8,7 +8,7 @@ import { XRControllerModelFactory } from 'three/addons/webxr/XRControllerModelFa
 import { DragControls } from 'three/addons/controls/DragControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { Flow } from 'three/examples/jsm/Addons.js';
-
+import { getObjSnap } from './getObjSnap';
 let container;
 let camera: THREE.PerspectiveCamera, scene, renderer;
 let controller1, controller2;
@@ -23,7 +23,8 @@ let controls, group;
 
 let enableSelection = false;
 
-const objects = [];
+const objects = [],
+  objectSnapshots = [];
 
 const pointsArr = [
   [
@@ -190,7 +191,7 @@ function init() {
       objects.push(object);
     });
   });
-
+  updateObjectListInfo();
   //
 
   renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
@@ -213,8 +214,25 @@ function init() {
   controller2.addEventListener('selectend', onSelectEnd);
   scene.add(controller2);
 
-  const axesHelper = new THREE.AxesHelper(1000);
-  scene.add(axesHelper);
+  // const axesHelper = new THREE.AxesHelper(1000);
+  // scene.add(axesHelper);
+  const xPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(10000, 0, 0)];
+  const xMat = new THREE.LineBasicMaterial({ color: 'red', linewidth: 3 });
+  const xGeometry = new THREE.BufferGeometry().setFromPoints(xPoints);
+  const xLine = new THREE.Line(xGeometry, xMat);
+  scene.add(xLine);
+
+  const yPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 10000, 0)];
+  const yMat = new THREE.LineBasicMaterial({ color: 'green', linewidth: 3 });
+  const yGeometry = new THREE.BufferGeometry().setFromPoints(yPoints);
+  const yLine = new THREE.Line(yGeometry, yMat);
+  scene.add(yLine);
+
+  const zPoints = [new THREE.Vector3(0, 0, 0), new THREE.Vector3(0, 0, 10000)];
+  const zMat = new THREE.LineBasicMaterial({ color: 'blue', linewidth: 3 });
+  const zGeometry = new THREE.BufferGeometry().setFromPoints(zPoints);
+  const zLine = new THREE.Line(zGeometry, zMat);
+  scene.add(zLine);
 
   const controllerModelFactory = new XRControllerModelFactory();
 
@@ -461,6 +479,34 @@ function movingObjects() {
   obj3.position.copy(eVector);
 }
 
+function updateObjectListInfo() {
+  // Get snapshot:
+  let html = '';
+  for (let i = 0; i < objects.length; i++) {
+    let snapshot = objectSnapshots?.[i];
+    const object = objects[i];
+    if (!snapshot) {
+      const snapshot = getObjSnap(objects[i]);
+      objectSnapshots.push(snapshot);
+    }
+
+    const item = `
+      <div class="object-item">  
+        <img src="${objectSnapshots[i]}" alt="object snapshot" />
+        <div class="object-info">
+         (${object.position.x.toFixed(2)}, ${object.position.y.toFixed(
+      2
+    )}, ${object.position.z.toFixed(2)})
+        </div>
+      </div>
+    `;
+    html += item;
+  }
+
+  document.querySelector('#object-list .object-item-container').innerHTML = html;
+  console.log({ objectSnapshots });
+}
+
 function animate() {
   cleanIntersected();
 
@@ -468,6 +514,7 @@ function animate() {
   intersectObjects(controller2);
 
   movingObjects();
+  updateObjectListInfo();
 
   renderer.render(scene, camera);
 }

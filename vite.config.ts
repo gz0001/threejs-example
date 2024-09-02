@@ -1,10 +1,9 @@
-import { resolve } from 'path'
-import { fileURLToPath } from 'url'
-import { defineConfig } from 'vite'
+import { resolve } from 'path';
+import { fileURLToPath } from 'url';
+import { defineConfig } from 'vite';
 
 // https://vitejs.dev/config/
 export default defineConfig({
-
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
@@ -15,8 +14,9 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, './index.html'),
         camera: resolve(__dirname, './camera.html'),
+        test: resolve(__dirname, './test.html'),
       },
     },
   },
-  base: './'
-})
+  base: './',
+});
