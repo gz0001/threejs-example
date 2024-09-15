@@ -9,6 +9,8 @@ import { DragControls } from 'three/addons/controls/DragControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { Flow } from 'three/examples/jsm/Addons.js';
 import { getObjSnap } from './getObjSnap';
+import { fitCameraToObject } from './fitCameraToObject';
+
 let container;
 let camera: THREE.PerspectiveCamera, scene, renderer;
 let controller1, controller2;
@@ -25,6 +27,7 @@ let enableSelection = false;
 
 const objects = [],
   objectSnapshots = [];
+let selectedFollowIndex = null;
 
 const pointsArr = [
   [
@@ -46,6 +49,7 @@ const eVector = new THREE.Vector3();
 const paths = [];
 
 const mouse = new THREE.Vector2();
+
 init();
 
 function init() {
@@ -479,32 +483,63 @@ function movingObjects() {
   obj3.position.copy(eVector);
 }
 
+function moveToObject(object) {
+  const cameraOffset = new THREE.Vector3(1, 1, 1);
+  const objectPosition = new THREE.Vector3();
+  object.getWorldPosition(objectPosition);
+  camera.position.copy(objectPosition).add(cameraOffset);
+}
+
 function updateObjectListInfo() {
   // Get snapshot:
   let html = '';
+  const container = document.querySelector('#object-list .object-item-container');
+
+  const handleSelectFollow = (id) => {
+    console.log('Follow id: ', id);
+    const object = objects[id];
+
+    container?.querySelectorAll('.object-item').forEach((item) => {
+      item.classList.remove('active');
+    });
+    if (selectedFollowIndex === id) {
+      selectedFollowIndex = null;
+    } else {
+      container.querySelector(`.object-item[data-id="${id}"]`).classList.add('active');
+      selectedFollowIndex = id;
+      fitCameraToObject(object, camera, controls);
+    }
+  };
+
   for (let i = 0; i < objects.length; i++) {
     let snapshot = objectSnapshots?.[i];
     const object = objects[i];
     if (!snapshot) {
       const snapshot = getObjSnap(objects[i]);
       objectSnapshots.push(snapshot);
+
+      const item = document.createElement('div');
+      item.classList.add('object-item');
+      item.dataset.id = i;
+      item.innerHTML = `
+        <img src="${snapshot}" alt="object snapshot" />
+        <div class="object-info">
+        </div>
+      `;
+
+      item.addEventListener('click', () => handleSelectFollow(i));
+
+      container.appendChild(item);
     }
 
-    const item = `
-      <div class="object-item">  
-        <img src="${objectSnapshots[i]}" alt="object snapshot" />
-        <div class="object-info">
-         (${object.position.x.toFixed(2)}, ${object.position.y.toFixed(
-      2
-    )}, ${object.position.z.toFixed(2)})
-        </div>
-      </div>
-    `;
-    html += item;
+    const objInfo = container.querySelector(`.object-item[data-id="${i}"] .object-info`);
+    objInfo &&
+      (objInfo.innerHTML = `(${object.position.x.toFixed(2)}, ${object.position.y.toFixed(
+        2
+      )}, ${object.position.z.toFixed(2)})`);
   }
 
-  document.querySelector('#object-list .object-item-container').innerHTML = html;
-  console.log({ objectSnapshots });
+  //console.log({ objectSnapshots });
 }
 
 function animate() {
@@ -515,6 +550,11 @@ function animate() {
 
   movingObjects();
   updateObjectListInfo();
+
+  if (selectedFollowIndex !== null && selectedFollowIndex < 3) {
+    const object = objects[selectedFollowIndex];
+    fitCameraToObject(object, camera, controls);
+  }
 
   renderer.render(scene, camera);
 }

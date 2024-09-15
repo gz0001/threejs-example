@@ -147,6 +147,17 @@ img {
   .object-item {
     width: 10rem;
     flex-shrink: 0;
+    border: 2px solid transparent;
+
+    &:hover {
+      cursor: pointer;
+    }
+
+    &.active {
+      img {
+        border: 2px solid #fff;
+      }
+    }
   }
 }
 
