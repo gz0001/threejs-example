@@ -139,6 +139,10 @@ img {
   max-width: calc(100vw - 17rem);
   padding: 1rem 1.5rem;
 
+  .object-view-setting {
+    margin-bottom: 0.5rem;
+  }
+
   .object-item-container {
     display: flex;
     gap: 1rem;

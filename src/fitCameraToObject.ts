@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import * as THREE from 'three';
 
 
@@ -34,4 +36,23 @@ export function fitCameraToObject(object, camera, controls, fitOffset = 4) {
   camera.position.copy(controls.target).sub(direction);
 
   controls.update();
+}
+
+export function cameraFollowObject(object, camera, offset = -3) {
+ // Calculate the position behind the object
+ const objectWorldPosition = new THREE.Vector3();
+ object.getWorldPosition(objectWorldPosition);
+ const objectWorldDirection = new THREE.Vector3();
+ object.getWorldDirection(objectWorldDirection);
+
+ // Update the camera position
+ const cameraPosition = objectWorldPosition
+   .clone()
+   .add(objectWorldDirection.clone().multiplyScalar(offset))
+ camera.position.copy(cameraPosition);
+
+ // Keep the camera's rotation fixed
+ camera.rotation.copy(object.rotation);
+
+ camera.lookAt(objectWorldPosition);
 }

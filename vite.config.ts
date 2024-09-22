@@ -14,7 +14,6 @@ export default defineConfig({
       input: {
         index: resolve(__dirname, './index.html'),
         camera: resolve(__dirname, './camera.html'),
-        test: resolve(__dirname, './test.html'),
       },
     },
   },

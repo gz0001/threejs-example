@@ -9,7 +9,7 @@ import { DragControls } from 'three/addons/controls/DragControls.js';
 import { STLLoader } from 'three/examples/jsm/loaders/STLLoader';
 import { Flow } from 'three/examples/jsm/Addons.js';
 import { getObjSnap } from './getObjSnap';
-import { fitCameraToObject } from './fitCameraToObject';
+import { fitCameraToObject, cameraFollowObject } from './fitCameraToObject';
 
 let container;
 let camera: THREE.PerspectiveCamera, scene, renderer;
@@ -49,6 +49,8 @@ const eVector = new THREE.Vector3();
 const paths = [];
 
 const mouse = new THREE.Vector2();
+
+let viewMode = 'fixed';
 
 init();
 
@@ -345,6 +347,12 @@ function init() {
   };
 
   document.querySelector('#snapshot button')?.addEventListener('click', saveAsImage);
+
+  // Handle view mode change:
+  const selectModeEle = document.querySelector('#object-view-mode-select');
+  selectModeEle?.addEventListener('change', (event) => {
+    viewMode = event.target.value;
+  });
 }
 
 function onWindowResize() {
@@ -481,6 +489,11 @@ function movingObjects() {
   const obj3 = objects[2];
   eCurve.getPointAt(t, eVector);
   obj3.position.copy(eVector);
+
+  // Update obj3's rotation to match the tangent of the curve
+  const eTangent = eCurve.getTangentAt(t).normalize();
+  const eTangent3d = new THREE.Vector3(eTangent.x, eTangent.y, 0);
+  obj3.lookAt(eVector.clone().add(new THREE.Vector3().copy(eTangent3d)));
 }
 
 function moveToObject(object) {
@@ -538,8 +551,6 @@ function updateObjectListInfo() {
         2
       )}, ${object.position.z.toFixed(2)})`);
   }
-
-  //console.log({ objectSnapshots });
 }
 
 function animate() {
@@ -553,7 +564,12 @@ function animate() {
 
   if (selectedFollowIndex !== null && selectedFollowIndex < 3) {
     const object = objects[selectedFollowIndex];
-    fitCameraToObject(object, camera, controls);
+
+    if (viewMode === 'fixed') {
+      cameraFollowObject(object, camera);
+    } else {
+      fitCameraToObject(object, camera, controls);
+    }
   }
 
   renderer.render(scene, camera);
