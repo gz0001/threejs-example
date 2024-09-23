@@ -239,6 +239,9 @@ function init() {
   const zGeometry = new THREE.BufferGeometry().setFromPoints(zPoints);
   const zLine = new THREE.Line(zGeometry, zMat);
   scene.add(zLine);
+  
+  const gridHelper = new THREE.GridHelper( 100, 100 );
+  scene.add( gridHelper );
 
   const controllerModelFactory = new XRControllerModelFactory();
 
@@ -477,7 +480,7 @@ function movingObjects() {
     const obj = objects[i];
     const num = pointsArr[i].length + 1;
     const time = Date.now();
-    const t = ((time / (i * 500 + 1000)) % num) / num;
+    const t = ((time / (i * 500 + 2000)) % num) / num;
     const pos = path.getPointAt(t);
     obj.position.copy(pos);
 
@@ -485,7 +488,7 @@ function movingObjects() {
     obj.lookAt(pos.clone().add(tangent));
   });
 
-  let t = (clock.getElapsedTime() * 0.5) % 1;
+  let t = (clock.getElapsedTime() * 0.1) % 1;
   const obj3 = objects[2];
   eCurve.getPointAt(t, eVector);
   obj3.position.copy(eVector);
