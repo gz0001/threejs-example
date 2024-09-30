@@ -104,8 +104,9 @@ function init() {
 
   for (let i = 0; i < 3; i++) {
     const geometry = geometries[Math.floor(Math.random() * geometries.length)];
-    const material = new THREE.MeshStandardMaterial({
-      color: Math.random() * 0xffffff,
+    const color = Math.random() * 0xffffff;
+    const material = new THREE.MeshPhongMaterial({
+      color: color,
       roughness: 0.7,
       metalness: 0.0,
     });
@@ -205,6 +206,8 @@ function init() {
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setAnimationLoop(animate);
   renderer.shadowMap.enabled = true;
+  renderer.transparent=true;
+  renderer.alpha=true;
   renderer.xr.enabled = true;
   container.appendChild(renderer.domElement);
 
@@ -240,8 +243,8 @@ function init() {
   const zLine = new THREE.Line(zGeometry, zMat);
   scene.add(zLine);
   
-  const gridHelper = new THREE.GridHelper( 100, 100 );
-  scene.add( gridHelper );
+  const gridHelper = new THREE.GridHelper(100, 100);
+  scene.add(gridHelper);
 
   const controllerModelFactory = new XRControllerModelFactory();
 
@@ -567,11 +570,19 @@ function animate() {
 
   if (selectedFollowIndex !== null && selectedFollowIndex < 3) {
     const object = objects[selectedFollowIndex];
-
-    if (viewMode === 'fixed') {
-      cameraFollowObject(object, camera);
+    const isFirstPersonView = viewMode?.includes('first');
+    object.visible = !isFirstPersonView;
+    
+    if (viewMode?.includes('fixed')) {
+      cameraFollowObject(object, camera, isFirstPersonView);
     } else {
-      fitCameraToObject(object, camera, controls);
+      fitCameraToObject(object, camera, controls, isFirstPersonView);
+    }
+  }
+  
+  for (let i = 0; i < objects.length; i++) {
+    if(selectedFollowIndex !== i && selectedFollowIndex < 3) {
+      objects[i].visible = true;
     }
   }
 
