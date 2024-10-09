@@ -122,7 +122,6 @@ function init() {
     new THREE.TorusGeometry(0.2, 0.04, 64, 32),
   ];
 
-
   // ellipse path
   eLine = new THREE.Line(
     new THREE.BufferGeometry().setFromPoints(eCurve.getSpacedPoints(100)),
@@ -192,7 +191,7 @@ function init() {
         movingObjects.push({
           objIndex: objects.length - 1,
           pathIndex: pathSelected,
-          speed: document.querySelector('.js-speed').value || 500,
+          speed: document.querySelector('.js-speed').value || 10,
         });
       }
       MicroModal.close('modal-1');
@@ -307,19 +306,23 @@ function init() {
         specular: 0x111111,
         shininess: 200,
       });
-      const object = new THREE.Mesh(geometry, material);
-      object.position.x = Math.random() * 4 - 2;
-      object.position.y = Math.random() * 2;
-      object.position.z = Math.random() * 4 - 2;
+      
+      droppedGeometry = geometry;
+      // const object = new THREE.Mesh(geometry, material);
+      // object.position.x = Math.random() * 4 - 2;
+      // object.position.y = Math.random() * 2;
+      // object.position.z = Math.random() * 4 - 2;
 
-      object.scale.setScalar(Math.random() + 0.5);
+      // object.scale.setScalar(Math.random() + 0.5);
 
-      object.castShadow = true;
-      object.receiveShadow = true;
+      // object.castShadow = true;
+      // object.receiveShadow = true;
 
-      geometry.center();
-      group.add(object);
-      objects.push(object);
+      // geometry.center();
+      // group.add(object);
+      // objects.push(object);
+      
+      MicroModal.show('modal-1');
     });
   });
 
@@ -501,11 +504,12 @@ function handleMovingObjects() {
   movingObjects.forEach((movingObj) => {
     const objIndex = movingObj.objIndex;
     const obj = objects[objIndex];
-    const path = paths[movingObj.pathIndex];
+    const pathIndex = movingObj.pathIndex;
+    const path = paths[pathIndex];
     if (obj && path) {
-      if (movingObj.pathIndex > 0) {
+      if (pathIndex > 0) {
         const num = path.getPoints(50).length;
-        const time = Date.now();
+        const time = Date.now() + objIndex * 1000;
         const t = ((time / (201 - movingObj.speed)) % num) / num;
         const pos = path.getPointAt(t);
         obj.position.copy(pos);
@@ -513,8 +517,10 @@ function handleMovingObjects() {
         const tangent = path.getTangentAt(t).normalize();
         obj.lookAt(pos.clone().add(tangent));
       } else {
-        let t = (clock.getElapsedTime() * (parseFloat(movingObj.speed) / 200)) % 1;
-        eCurve.getPointAt(t, eVector);
+        let t =
+          ((clock.getElapsedTime()) * (parseFloat(movingObj.speed) / 200)) % 1;
+        const pointAt = t + objIndex * 0.05 > 1 ? 1 : t + objIndex * 0.05;
+        eCurve.getPointAt(pointAt, eVector);
         obj.position.copy(eVector);
 
         // Update obj's rotation to match the tangent of the curve
