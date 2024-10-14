@@ -16,6 +16,7 @@
   },
   "dependencies": {
     "camera-controls": "^2.9.0",
+    "dat.gui": "^0.7.9",
     "micromodal": "^0.4.10",
     "three": "^0.166.1"
   }

@@ -13,7 +13,9 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve(__dirname, './index.html'),
-        camera: resolve(__dirname, './camera.html'),
+        camera: resolve(__dirname, './camera.html'),        
+        texture: resolve(__dirname, './texture.html'),
+
       },
     },
   },
