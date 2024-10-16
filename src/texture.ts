@@ -31,6 +31,7 @@ let enableSelection = false;
 
 const objects = [];
 let objMesh;
+let mainMaterial;
 
 const mouse = new THREE.Vector2();
 
@@ -200,8 +201,8 @@ function init() {
     objLoader.setMaterials(materials);
     objLoader.load('./models/Furniture.obj', (object) => {
       objMesh = object;
-      console.log({ objMesh, materials });
-
+      mainMaterial = materials.materials?.['Material.002'];
+      console.log({ objMesh, mainMaterial });
       objects.push(objMesh);
       scene.add(objMesh);
 
@@ -267,6 +268,28 @@ function init() {
 
       scaleFolder.open();
     });
+  });
+
+  const fileInput = document.querySelector('#file');
+  fileInput?.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = async (e) => {
+        const textureLoader = new THREE.TextureLoader();
+        const texture = await textureLoader.loadAsync(e.target.result as string);
+
+        const newMaterial = new THREE.MeshBasicMaterial({ map: texture, name: 'Material.002' });
+
+        objMesh.traverse((child) => {
+          if (child instanceof THREE.Mesh && child.material?.name === 'Material.002') {
+            child.material = newMaterial;
+            child.material.needsUpdate = true;
+          }
+        });
+      };
+      reader.readAsDataURL(file);
+    }
   });
 }
 
