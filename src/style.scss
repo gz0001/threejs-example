@@ -179,3 +179,12 @@ img {
 #snapshot {
   bottom: 8rem;
 }
+
+#cam {
+  position: fixed;
+  top: 2rem;
+  left: 2rem;
+  background-color: rgba(0, 0, 0, 0.5);
+
+  border: 2px solid #000;
+}

@@ -16,16 +16,17 @@ import { fitCameraToObject, cameraFollowObject } from './fitCameraToObject';
 import MicroModal from 'micromodal';
 
 let container;
-let camera: THREE.PerspectiveCamera, scene, renderer;
+let camera: THREE.PerspectiveCamera, cam2: THREE.PerspectiveCamera, scene, renderer, renderer2;
 let controller1, controller2;
 let dragControllers;
 let controllerGrip1, controllerGrip2;
 
 let raycaster;
-
+const cam2Width = 320,
+  cam2Height = 320;
 const intersected = [];
 
-let controls, group;
+let controls, control2, group;
 
 let enableSelection = false;
 
@@ -45,6 +46,7 @@ function init() {
   MicroModal.init();
   container = document.createElement('div');
   document.body.appendChild(container);
+  const camContainer = document.getElementById('cam');
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color('white');
@@ -55,6 +57,13 @@ function init() {
   controls = new OrbitControls(camera, container);
   controls.target.set(0, 1.6, 0);
   controls.update();
+
+  cam2 = new THREE.PerspectiveCamera(50, cam2Width / cam2Height, 0.1, 2000);
+  cam2.position.set(14, 4, 0);
+
+  control2 = new OrbitControls(cam2, camContainer);
+  control2.target.set(0, 0, 0);
+  control2.update();
 
   const floorGeometry = new THREE.PlaneGeometry(6, 6);
   const floorMaterial = new THREE.ShadowMaterial({
@@ -92,8 +101,12 @@ function init() {
   renderer.xr.enabled = true;
   container.appendChild(renderer.domElement);
 
-  // controllers
+  // Create a second renderer for cam2
+  renderer2 = new THREE.WebGLRenderer();
+  renderer2.setSize(cam2Width, cam2Height);
+  camContainer.appendChild(renderer2.domElement);
 
+  // controllers
   controller1 = renderer.xr.getController(0);
   controller1.addEventListener('selectstart', onSelectStart);
   controller1.addEventListener('selectend', onSelectEnd);
@@ -202,7 +215,7 @@ function init() {
     objLoader.load('./models/Furniture.obj', (object) => {
       objMesh = object;
       mainMaterial = materials.materials?.['Material.002'];
-      console.log({ objMesh, mainMaterial });
+      console.log(objMesh);
       objects.push(objMesh);
       scene.add(objMesh);
 
@@ -417,4 +430,11 @@ function animate() {
   // intersectObjects(controller2);
 
   renderer.render(scene, camera);
+  control2.update();
+  renderer2.render(scene, cam2);
+
+  // let vec = new THREE.Vector3();
+  // vec.copy(cam2.position)
+  // cam2.localToWorld(vec);
+  // console.log({vec});
 }
