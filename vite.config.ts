@@ -15,6 +15,7 @@ export default defineConfig({
         index: resolve(__dirname, './index.html'),
         camera: resolve(__dirname, './camera.html'),        
         texture: resolve(__dirname, './texture.html'),
+        client: resolve(__dirname, './client.html'),
 
       },
     },

@@ -126,7 +126,8 @@ img {
 
 #upload,
 #snapshot,
-#object-list {
+#object-list,
+#reset {
   position: fixed;
   bottom: 2rem;
   right: 2rem;
@@ -187,4 +188,9 @@ img {
   background-color: rgba(0, 0, 0, 0.5);
 
   border: 2px solid #000;
+}
+
+#reset {
+  left: 2rem;
+  right: auto;
 }
