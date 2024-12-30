@@ -56,25 +56,31 @@ const mouse = new THREE.Vector2();
 
 let viewMode = 'fixed';
 
-const handleUpdateIntervall = (intervall) => {
-  clearInterval(updateIntervall);
-  updateIntervall = setInterval(async () => {
+const handleUpdateInterval = async (interval) => {
+  clearInterval(updateInterval);
+  updateInterval = setInterval(async () => {
     await handleUpdateRotation();
-  }, intervall * 1000);
+  }, interval * 1000);
+
+  await post('/settings', { updateInterval: interval });
 };
 const handleUpdateRotation = async (isFirst) => {
   try {
-    const data = await fetcher('/objects/rotation');
+    const data = await fetcher('/objects');
 
     const objectsMap = {};
     objects.forEach((object) => {
       objectsMap[object.name] = object;
     });
 
-    data?.forEach(({ id, rotateAxis, rotateDeg }) => {
+    console.log({ data, objectsMap });
+
+    data?.forEach(({ id, settings = {} }) => {
+      const { pos, rot } = settings;
       const object = objectsMap[id];
+
       if (object) {
-        rotateObject(object, { [rotateAxis]: rotateDeg });
+        updateObjectState(object, { position: pos, rotation: rot });
       }
     });
   } catch (error) {
@@ -113,43 +119,56 @@ const loadStlUrl = (url) =>
     loader.load(url, (geometry) => resolve(geometry));
   });
 
-const handleloadObjects = () => {
-  fetcher('/objects').then(async (data) => {
-    for (const item of data) {
-      const { id, settings } = item;
-      let geometry = null;
-      if (settings.type === 'stl') {
-        geometry = await loadStlUrl(`${API_URL}${item.path}`);
-      }
-
-      handleAddObject({ id, ...settings }, geometry);
+const handleloadObjects = async () => {
+  const data = await fetcher('/objects');
+  for (const item of data) {
+    const { id, settings } = item;
+    let geometry = null;
+    if (settings.type === 'stl') {
+      geometry = await loadStlUrl(`${API_URL}${item.path}`);
     }
 
-    await handleUpdateRotation(true);
-    updateIntervall = setInterval(async () => {
-      await handleUpdateRotation();
-    }, params.intervall * 1000);
-  });
+    handleAddObject({ id, ...settings }, geometry);
+  }
+
+  const settings = await fetcher('/settings');
+  const settingsUpdateInterval =
+    settings?.find((setting) => setting.key === 'updateInterval')?.value || 2;
+  const updateIntervalValue = parseInt(settingsUpdateInterval, 10);
+
+  const params = { interval: updateIntervalValue };
+  const gui: GUI = new GUI();
+  const settingsFolder = gui.addFolder('Settings');
+  settingsFolder.add(params, 'interval', 1, 20, 1).onChange(handleUpdateInterval);
+  settingsFolder.open();
+
+  await handleUpdateRotation(true);
+  updateInterval = setInterval(async () => {
+    await handleUpdateRotation();
+  }, params.interval * 1000);
 };
 
-const rotateObject = (object, target) => {
+const updateObjectState = (object, target) => {
+  const { position, rotation } = target;
+
   gsap.to(object.rotation, {
-    ...target,
+    ...rotation,
+    duration: 1,
+    ease: 'none',
+  });
+  
+  gsap.to(object.position, {
+    ...position,
     duration: 1,
     ease: 'none',
   });
 };
 
-let updateIntervall;
-const params = { intervall: 2 };
-const gui: GUI = new GUI();
-const settingsFolder = gui.addFolder('Settings');
-settingsFolder.add(params, 'intervall', 1, 20, 1).onChange(handleUpdateIntervall);
-settingsFolder.open();
+let updateInterval;
 
 init();
 
-function init() {
+async function init() {
   MicroModal.init();
   container = document.createElement('div');
   document.body.appendChild(container);
@@ -190,7 +209,7 @@ function init() {
   group = new THREE.Group();
   scene.add(group);
 
-  handleloadObjects();
+  await handleloadObjects();
 
   // Vector position and drap objects
   document.querySelectorAll('.nav-item').forEach((item) => {
@@ -394,7 +413,7 @@ function init() {
     });
     objects.length = 0;
     objectSnapshots.length = 0;
-    
+
     await post('/objects/reset');
   });
 }

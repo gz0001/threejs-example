@@ -57,6 +57,9 @@ app.use(process.env.API_PATH || '/', router);
   await db.exec(
     'CREATE TABLE IF NOT EXISTS object (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, type TEXT, path TEXT, rotateAxis TEXT, rotateDeg REAL, settings TEXT)'
   );
+  await db.exec(
+    'CREATE TABLE IF NOT EXISTS settings (id INTEGER PRIMARY KEY AUTOINCREMENT, key TEXT NOT NULL UNIQUE, value TEXT NOT NULL)'
+  );
 
   // Define a route to fetch data from the database
   router.get('/objects', async (req, res) => {
@@ -65,6 +68,23 @@ app.use(process.env.API_PATH || '/', router);
       const settings = JSON.parse(row.settings);
       return { ...row, settings };
     });
+    res.json(data);
+  });
+
+  router.get('/settings', async (req, res) => {
+    const rows = await db.all('SELECT * FROM settings');
+    res.json(rows);
+  });
+
+  router.post('/settings', async (req, res) => {
+
+    const data = req.body;
+    const keys = Object.keys(data);
+    for (const key of keys) {
+      const value = data[key];
+      await db.run('INSERT OR REPLACE INTO settings (key, value) VALUES (?, ?)', [key, value]);
+    }
+
     res.json(data);
   });
 
@@ -92,6 +112,31 @@ app.use(process.env.API_PATH || '/', router);
       res.json(data);
     } catch (error) {
       res.json([]);
+    }
+  });
+
+  router.post('/object/state', async (req, res) => {
+    try {
+      const { id, position = {}, rotation = {} } = req.body;
+
+
+      const row = await db.get('SELECT * FROM object WHERE id = ?', id);
+      const settings = JSON.parse(row.settings);
+      const currentRotation = settings.rot;
+
+      const { x, y, z } = rotation;
+      const xRad = x ? degreesToRads(x) : currentRotation.x;
+      const yRad = y ? degreesToRads(y) : currentRotation.y;
+      const zRad = z ? degreesToRads(z) : currentRotation.z;
+
+      const newRotation = { x: xRad, y: yRad, z: zRad };      
+
+      settings.pos = { ...settings.pos, ...position };
+      settings.rot = newRotation;
+      await db.run('UPDATE object SET settings = ? WHERE id = ?', [JSON.stringify(settings), id]);
+      res.json({ id });
+    } catch (error) {
+      res.status(500).json({ error });
     }
   });
 
